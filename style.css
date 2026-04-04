@@ -1,0 +1,13 @@
+body{
+    background-color:black;
+    color:lime;
+    text-align:center;
+    front-family:monospace;
+}
+
+button{
+    padding:10px;
+    background:red;
+    color:white;
+    border:none;
+}

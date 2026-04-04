@@ -1,0 +1,16 @@
+Target: google.com
+
+DNS:
+None
+
+Subdomains:
+https://www.google.com
+https://mail.google.com
+https://admin.google.com
+
+Ports:
+80
+443
+
+Directories:
+http://google.com/dashboard
