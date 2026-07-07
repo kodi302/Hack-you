@@ -1,36 +1,112 @@
+"""
+Hack-You Professional Directory Enumerator
+Version : 2.0
+"""
+
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from rich.progress import Progress
 
-def run_dir_enum(target, mode="fast"):
-    print("[INFO] DIRECTORY ENUMERATION")
+COMMON_PATHS = [
+    "admin",
+    "login",
+    "dashboard",
+    "robots.txt",
+    "sitemap.xml",
+    ".git",
+    ".env",
+    "backup",
+    "config",
+    "uploads",
+    "images",
+    "css",
+    "js",
+    "api",
+    "wp-admin",
+    "phpmyadmin",
+    "server-status",
+    "test",
+    "dev",
+    "panel"
+]
 
-    found = []
 
-    # 🔹 protocol auto handle
-    base_url = f"http://{target}"
+def scan_path(base_url, path, timeout=5):
 
-    # 🔹 wordlist load
-    with open("data/dirs.txt") as f:
-        dirs = f.read().splitlines()
+    url = base_url.rstrip("/") + "/" + path
 
-    for d in dirs:
-        url = f"{base_url}/{d}"
+    try:
 
-        try:
-            r = requests.get(url, timeout=2)
+        r = requests.get(
+            url,
+            timeout=timeout,
+            allow_redirects=True,
+            headers={
+                "User-Agent": "Hack-You Scanner"
+            }
+        )
 
-            # 🔥 better filtering
-            if r.status_code == 200:
-                print(f"[FOUND] /{d} → 200 (OK)")
-                found.append(url)
+        if r.status_code < 400:
 
-            elif r.status_code == 403:
-                print(f"[FORBIDDEN] /{d} → 403 (Protected)")
-                found.append(url)
+            return {
+                "url": url,
+                "status": r.status_code,
+                "length": len(r.text),
+                "server": r.headers.get("Server", ""),
+                "title": (
+                    r.text.split("<title>")[1].split("</title>")[0]
+                    if "<title>" in r.text.lower()
+                    else ""
+                )
+            }
 
-            elif r.status_code == 301 or r.status_code == 302:
-                print(f"[REDIRECT] /{d} → {r.status_code}")
+    except Exception:
+        pass
 
-        except requests.exceptions.RequestException:
-            pass
+    return None
 
-    return found
+
+def run_dir_enum(
+    target,
+    mode="fast",
+    threads=50
+):
+
+    if not target.startswith("http"):
+        target = "http://" + target
+
+    results = []
+
+    with Progress() as progress:
+
+        task = progress.add_task(
+            "[cyan]Directory Scan...",
+            total=len(COMMON_PATHS)
+        )
+
+        with ThreadPoolExecutor(
+            max_workers=threads
+        ) as executor:
+
+            futures = [
+                executor.submit(
+                    scan_path,
+                    target,
+                    path
+                )
+                for path in COMMON_PATHS
+            ]
+
+            for future in as_completed(futures):
+
+                result = future.result()
+
+                if result:
+                    results.append(result)
+
+                progress.update(
+                    task,
+                    advance=1
+                )
+
+    return results

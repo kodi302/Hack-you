@@ -1,36 +1,35 @@
 """
 Hack-You Professional DNS Enumerator
-Version : 2.0
+Version : 3.0
 """
 
 import dns.resolver
-import socket
 
-RECORD_TYPES = [
+RECORDS = [
     "A",
     "AAAA",
     "MX",
     "NS",
     "TXT",
     "CNAME",
-    "SOA",
 ]
 
 
-def run_dns_enum(domain):
+def scan(domain):
 
     result = {
         "target": domain,
-        "records": {},
-        "reverse_ip": None,
+        "records": {}
     }
 
-    # DNS Records
-    for record in RECORD_TYPES:
+    for record in RECORDS:
 
         try:
 
-            answers = dns.resolver.resolve(domain, record)
+            answers = dns.resolver.resolve(
+                domain,
+                record
+            )
 
             result["records"][record] = [
                 str(answer)
@@ -40,16 +39,5 @@ def run_dns_enum(domain):
         except Exception:
 
             result["records"][record] = []
-
-    # Reverse Lookup
-    try:
-
-        ip = socket.gethostbyname(domain)
-
-        result["reverse_ip"] = ip
-
-    except Exception:
-
-        result["reverse_ip"] = None
 
     return result

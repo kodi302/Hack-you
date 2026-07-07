@@ -1,32 +1,94 @@
-import requests
+"""
+Hack-You Professional Subdomain Enumerator
+Version : 2.0
+"""
 
-def run_subdomain_enum(target, mode="fast"):
-    print("[INFO] SUBDOMAIN ENUMERATION")
+import socket
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from rich.progress import Progress
 
-    found = []
+COMMON_SUBDOMAINS = [
+    "www",
+    "mail",
+    "ftp",
+    "api",
+    "dev",
+    "test",
+    "stage",
+    "admin",
+    "beta",
+    "blog",
+    "shop",
+    "cdn",
+    "ns1",
+    "ns2",
+    "smtp",
+    "webmail",
+    "cpanel",
+]
 
-    # 🔹 wordlist load
-    with open("data/subdomains.txt") as f:
-        subs = f.read().splitlines()
 
-    for sub in subs:
-        url_http = f"http://{sub}.{target}"
-        url_https = f"https://{sub}.{target}"
+def check_subdomain(domain, sub):
 
-        try:
-            # 🔥 pehle HTTPS try
-            r = requests.get(url_https, timeout=2)
-            print(f"[FOUND] {url_https} → {r.status_code}")
-            found.append(url_https)
+    host = f"{sub}.{domain}"
 
-        except:
-            try:
-                # fallback HTTP
-                r = requests.get(url_http, timeout=2)
-                if r.status_code < 400:
-                    print(f"[FOUND] {url_http} → {r.status_code}")
-                    found.append(url_http)
-            except:
-                pass
+    try:
 
-    return found
+        ip = socket.gethostbyname(host)
+
+        return {
+            "subdomain": host,
+            "ip": ip,
+        }
+
+    except Exception:
+
+        return None
+
+
+def run_subdomain_enum(
+    domain,
+    mode="fast",
+    threads=50
+):
+
+    if mode == "fast":
+        wordlist = COMMON_SUBDOMAINS
+    else:
+        wordlist = COMMON_SUBDOMAINS
+
+    results = []
+
+    with Progress() as progress:
+
+        task = progress.add_task(
+            "[cyan]Enumerating Subdomains...",
+            total=len(wordlist)
+        )
+
+        with ThreadPoolExecutor(
+            max_workers=threads
+        ) as executor:
+
+            futures = [
+                executor.submit(
+                    check_subdomain,
+                    domain,
+                    sub
+                )
+                for sub in wordlist
+            ]
+
+            for future in as_completed(futures):
+
+                data = future.result()
+
+                if data:
+                    results.append(data)
+
+                progress.update(
+                    task,
+                    advance=1
+                )
+
+    return results

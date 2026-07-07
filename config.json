@@ -1,0 +1,7 @@
+{
+    "app_name": "Hack-You",
+    "version": "2.0.0",
+    "threads": 50,
+    "timeout": 5,
+    "theme": "dark"
+}

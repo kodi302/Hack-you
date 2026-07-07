@@ -1,29 +1,143 @@
-import os
+"""
+Hack-You Professional Report Generator
+Version : 2.0
+"""
+
+import json
 from datetime import datetime
+from pathlib import Path
 
-def generate_report(target, dns, subs, ports, dirs):
-    folder = f"output/{target}"
-    os.makedirs(folder, exist_ok=True)
+REPORT_DIR = Path("reports")
+REPORT_DIR.mkdir(exist_ok=True)
 
-    filename = datetime.now().strftime("%Y%m%d_%H%M%S") + ".txt"
-    path = os.path.join(folder, filename)
 
-    with open(path, "w") as f:
-        f.write(f"Target: {target}\n\n")
+def generate_report(
+    target,
+    dns_data,
+    subdomains,
+    open_ports,
+    directories,
+):
+    """
+    Generate JSON + HTML Report
+    """
 
-        f.write("DNS:\n")
-        f.write(str(dns) + "\n\n")
+    report = {
+        "target": target,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "dns": dns_data,
+        "subdomains": subdomains,
+        "ports": open_ports,
+        "directories": directories,
+        "summary": {
+            "subdomains": len(subdomains),
+            "open_ports": len(open_ports),
+            "directories": len(directories)
+        }
+    }
 
-        f.write("Subdomains:\n")
-        for s in subs:
-            f.write(s + "\n")
+    # JSON Report
+    json_file = REPORT_DIR / f"{target}_report.json"
 
-        f.write("\nPorts:\n")
-        for p in ports:
-            f.write(str(p) + "\n")
+    with open(json_file, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=4)
 
-        f.write("\nDirectories:\n")
-        for d in dirs:
-            f.write(d + "\n")
+    # HTML Report
+    html_file = REPORT_DIR / f"{target}_report.html"
 
-    print(f"[INFO] Report saved: {path}")
+    html = f"""
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Hack-You Report</title>
+
+<style>
+
+body{{
+font-family:Arial;
+background:#111;
+color:#eee;
+padding:30px;
+}}
+
+table{{
+border-collapse:collapse;
+width:100%;
+}}
+
+td,th{{
+border:1px solid #444;
+padding:8px;
+}}
+
+th{{
+background:#00b894;
+}}
+
+h1,h2{{
+color:#00cec9;
+}}
+
+pre{{
+background:#222;
+padding:10px;
+}}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Hack-You Professional Report</h1>
+
+<h2>Target</h2>
+
+<p>{target}</p>
+
+<h2>Summary</h2>
+
+<table>
+
+<tr>
+<th>Open Ports</th>
+<th>Subdomains</th>
+<th>Directories</th>
+</tr>
+
+<tr>
+
+<td>{len(open_ports)}</td>
+
+<td>{len(subdomains)}</td>
+
+<td>{len(directories)}</td>
+
+</tr>
+
+</table>
+
+<h2>Full Result</h2>
+
+<pre>
+
+{json.dumps(report,indent=4)}
+
+</pre>
+
+</body>
+
+</html>
+"""
+
+    with open(html_file, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"\n[+] JSON Report : {json_file}")
+    print(f"[+] HTML Report : {html_file}")
+
+    return report

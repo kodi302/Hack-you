@@ -1,4 +1,9 @@
+rich
 requests
+dnspython
+python-whois
 colorama
+reportlab
+jinja2
+validators
 tqdm
-python-nmap
