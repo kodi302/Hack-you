@@ -42,19 +42,22 @@ def calculate_score(level):
 
 def analyze_risk(open_ports):
     """
-    Analyze risk based on detected open ports.
+    Analyze the risk level of open ports.
+    open_ports should be a list of port numbers.
+    Example:
+        [22, 80, 443]
     """
 
     console.print("\n[bold cyan]Risk Analysis[/bold cyan]")
 
     if not open_ports:
-        console.print("[green]✓ No open ports detected.[/green]")
+        console.print("[yellow]No open ports found.[/yellow]")
         return []
 
     table = Table(title="Risk Report")
 
-    table.add_column("Port", justify="center")
-    table.add_column("Severity")
+    table.add_column("Port", justify="center", style="cyan")
+    table.add_column("Severity", justify="center")
     table.add_column("Score", justify="center")
     table.add_column("Description")
 
@@ -64,19 +67,17 @@ def analyze_risk(open_ports):
 
         severity, description = RISK_DATABASE.get(
             port,
-            ("INFO", "Unknown Service"),
+            ("INFO", "Unknown Service")
         )
 
         score = calculate_score(severity)
 
-        report.append(
-            {
-                "port": port,
-                "severity": severity,
-                "score": score,
-                "description": description,
-            }
-        )
+        report.append({
+            "port": port,
+            "severity": severity,
+            "score": score,
+            "description": description,
+        })
 
         color = {
             "CRITICAL": "red",
@@ -95,17 +96,30 @@ def analyze_risk(open_ports):
 
     console.print(table)
 
-    total = sum(item["score"] for item in report)
+    total_score = sum(item["score"] for item in report)
 
-    console.print(f"\nOverall Risk Score : [bold]{total}[/bold]")
+    console.print(
+        f"\nOverall Risk Score : [bold]{total_score}[/bold]"
+    )
 
-    if total >= 40:
-        console.print("[red]Overall Risk Level : CRITICAL[/red]")
-    elif total >= 25:
-        console.print("[bright_red]Overall Risk Level : HIGH[/bright_red]")
-    elif total >= 10:
-        console.print("[yellow]Overall Risk Level : MEDIUM[/yellow]")
+    if total_score >= 40:
+        console.print(
+            "[bold red]Overall Risk Level : CRITICAL[/bold red]"
+        )
+
+    elif total_score >= 25:
+        console.print(
+            "[bold bright_red]Overall Risk Level : HIGH[/bold bright_red]"
+        )
+
+    elif total_score >= 10:
+        console.print(
+            "[bold yellow]Overall Risk Level : MEDIUM[/bold yellow]"
+        )
+
     else:
-        console.print("[green]Overall Risk Level : LOW[/green]")
+        console.print(
+            "[bold green]Overall Risk Level : LOW[/bold green]"
+        )
 
     return report

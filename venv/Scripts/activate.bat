@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\praveen\Desktop\Hack You\venv
+set VIRTUAL_ENV=C:\Users\praveen\Desktop\github  reposeries\Hack You\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

@@ -1,114 +1,55 @@
 """
-Hack-You Professional Port Scanner
-Version : 2.0
+Hack-You Professional Port Scanner Wrapper
+Version : 3.1
 """
 
-import socket
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from rich.progress import Progress
-
-COMMON_PORTS = {
-    21: "FTP",
-    22: "SSH",
-    23: "Telnet",
-    25: "SMTP",
-    53: "DNS",
-    80: "HTTP",
-    110: "POP3",
-    143: "IMAP",
-    443: "HTTPS",
-    445: "SMB",
-    3306: "MySQL",
-    3389: "RDP",
-    8080: "HTTP-ALT",
-}
+from modules.network.port_scan import scan
+from core.banner_grabber import grab_banner
 
 
-def scan_port(target, port, timeout=1):
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(timeout)
-
-    try:
-
-        if sock.connect_ex((target, port)) == 0:
-
-            banner = ""
-
-            try:
-
-                banner = sock.recv(1024).decode(
-                    errors="ignore"
-                ).strip()
-
-            except Exception:
-                pass
-
-            return {
-                "port": port,
-                "service": COMMON_PORTS.get(
-                    port,
-                    "Unknown"
-                ),
-                "banner": banner,
-                "state": "open",
-            }
-
-    except Exception:
-        pass
-
-    finally:
-        sock.close()
-
-    return None
-
-
-def run_port_scan(
-    target,
-    mode="fast",
-    threads=100
-):
+def run_port_scan(target, mode="fast", custom_ports=None):
+    """
+    mode:
+        fast   -> Common Ports
+        full   -> 1-65535
+        custom -> User Ports
+    """
 
     if mode == "fast":
 
-        ports = list(COMMON_PORTS.keys())
+        result = scan(target)
+
+    elif mode == "full":
+
+        result = scan(
+            target,
+            ports=range(1, 65536)
+        )
+
+    elif mode == "custom":
+
+        result = scan(
+            target,
+            ports=custom_ports
+        )
 
     else:
 
-        ports = range(1, 1025)
+        result = scan(target)
 
-    results = []
+    ports = result.get("ports", [])
 
-    with Progress() as progress:
+    for item in ports:
 
-        task = progress.add_task(
-            "[cyan]Scanning Ports...",
-            total=len(ports)
-        )
+        try:
 
-        with ThreadPoolExecutor(
-            max_workers=threads
-        ) as executor:
+            item["banner"] = grab_banner(
+                target,
+                item["port"]
+            )
 
-            futures = [
-                executor.submit(
-                    scan_port,
-                    target,
-                    port
-                )
-                for port in ports
-            ]
+        except Exception:
 
-            for future in as_completed(futures):
+            item["banner"] = "Unknown"
 
-                data = future.result()
-
-                if data:
-                    results.append(data)
-
-                progress.update(
-                    task,
-                    advance=1
-                )
-
-    return results
+    return ports

@@ -6,28 +6,30 @@ import sys
 console = Console()
 
 
-def show_banner():
+def show():
 
     banner = r"""
-
-██╗  ██╗ █████╗  ██████╗██╗  ██╗    ██╗   ██╗ ██████╗ ██╗   ██╗
-██║  ██║██╔══██╗██╔════╝██║ ██╔╝    ╚██╗ ██╔╝██╔═══██╗██║   ██║
-███████║███████║██║     █████╔╝      ╚████╔╝ ██║   ██║██║   ██║
-██╔══██║██╔══██║██║     ██╔═██╗       ╚██╔╝  ██║   ██║██║   ██║
-██║  ██║██║  ██║╚██████╗██║  ██╗       ██║   ╚██████╔╝╚██████╔╝
-╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝       ╚═╝    ╚═════╝  ╚═════╝
-
+██╗  ██╗ █████╗  ██████╗██╗  ██╗
+██║  ██║██╔══██╗██╔════╝██║ ██╔╝
+███████║███████║██║     █████╔╝
+██╔══██║██╔══██║██║     ██╔═██╗
+██║  ██║██║  ██║╚██████╗██║  ██╗
+╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 """
 
     console.print(
         Panel.fit(
             banner,
-            title="[cyan]Hack-You v2.0[/cyan]",
+            title="Hack-You v2.0",
             subtitle="Professional Cybersecurity Toolkit",
-            border_style="green",
+            border_style="green"
         )
     )
 
-    console.print(f"[cyan]Python :[/cyan] {sys.version.split()[0]}")
-    console.print(f"[cyan]OS      :[/cyan] {platform.system()}")
-    console.print(f"[cyan]Machine :[/cyan] {platform.machine()}")
+    console.print(f"Python : {sys.version.split()[0]}")
+    console.print(f"OS      : {platform.system()}")
+    console.print(f"Machine : {platform.machine()}")
+
+
+# Backward compatibility
+show_banner = show
